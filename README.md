@@ -1,6 +1,10 @@
-# scanner
+# FIND3 CLI scanner
 
-# Quickstart instructions
+This is a Bluetooth/WiFi scanner for FIND3. I suggest using Docker for this because it discovers WiFi using `iw` and Docker should make this process platform agnostic (I don't have a Mac so this is the best I can do for you).
+
+# Install
+
+## Quick quick way
 
 Install Docker:
 
@@ -8,11 +12,25 @@ Install Docker:
 $ curl -sSL https://get.docker.com | sh
 ```
 
-Fetch the latest Dockerfile and build the image:
+Fetch the latest image:
+
+```
+$ docker pull schollz/find3-cli-scanner
+```
+
+## Quick way
+
+Install Docker:
+
+```
+$ curl -sSL https://get.docker.com | sh
+```
+
+And then build the latest image.
 
 ```
 $ wget https://raw.githubusercontent.com/schollz/find3/master/scanner/Dockerfile
-$ docker build -t scanner .
+$ docker build -t schollz/find3-cli-scanner .
 ```
 
 Run the image in the background :

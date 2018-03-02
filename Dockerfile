@@ -2,18 +2,14 @@ FROM ubuntu:18.04
 
 # INSTALL BASICS
 RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y vim git wget wireless-tools bluetooth iw net-tools g++ sqlite3 tshark golang
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y vim git wget wireless-tools bluetooth iw net-tools tshark golang
 
 # CONFIGURE GO
 ENV GOPATH="/root/go"
 ENV PATH="/usr/local/go/bin:/root/go/bin:${PATH}"
 
-# INSTALL GO-SQLITE3
-RUN go get -v github.com/mattn/go-sqlite3
-RUN go install -v github.com/mattn/go-sqlite3
-
-# INSTALL FIND2 
-RUN go get -v github.com/schollz/find3/...
+# INSTALL find3-cli-scanner 
+RUN go get -v github.com/schollz/find3-cli-scanner
 
 # INSTALL BLUEZ FROM SOURCE
 # This is commented out because its not needed except for information's sake
@@ -36,6 +32,6 @@ RUN go get -v github.com/schollz/find3/...
 RUN bluetoothd --version
 
 # BUILD THE SCANNER
-WORKDIR /root/go/src/github.com/schollz/find3/scanner
+WORKDIR /root/go/src/github.com/schollz/find3-cli-scanner
 RUN go build -v
 RUN go install -v
