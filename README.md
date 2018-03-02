@@ -33,10 +33,42 @@ $ wget https://raw.githubusercontent.com/schollz/find3/master/scanner/Dockerfile
 $ docker build -t schollz/find3-cli-scanner .
 ```
 
-Run the image in the background :
+## Natively
+
+I don't recommed this because I can't gaurantee that all the processes that the scanner calls will work in every OS. I can tell you that these instructions will work on Ubuntu16/18 though.
+
+Install the dependencies.
 
 ```
-$ docker run --net="host" --privileged --name scanning -d -i -t scanner
+$ sudo apt-get install wireless-tools iw net-tools
+```
+
+(Optional) If you want to do Bluetooth scanning too, then also:
+
+```
+$ sudo apt-get install bluetooth
+```
+
+(Optional) If you want to do Passive scanning, then do:
+
+```
+$ sudo apt-get install tshark
+```
+
+Now [Install Go](https://golang.org/dl/) and pull the latest:
+
+```
+$ go get -u -v github.com/schollz/find3-cli-scanner
+```
+
+# Usage 
+
+## Docker usage
+
+First start the docker container in the background.
+
+```
+$ docker run --net="host" --privileged --name scanner -d -i -t schollz/find3-cli-scanner
 ```
 
 Then, you can send scanning commands using 
@@ -44,7 +76,7 @@ Then, you can send scanning commands using
 **Active scanning**:
 
 ```
-$ docker exec scanning sh -c "scanner -i YOURINTERFACE -debug -device YOURDEVICE -family YOURFAMILY -server http://YOURSERVER -scantime 10 -bluetooth -forever"
+$ docker exec scanner sh -c "find3-cli-scanner -i YOURINTERFACE -debug -device YOURDEVICE -family YOURFAMILY -server http://YOURSERVER -scantime 10 -bluetooth -forever"
 ```
 
 **Passive scanning**:
