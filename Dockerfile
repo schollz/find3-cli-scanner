@@ -1,7 +1,9 @@
-FROM ubuntu:18.04
+FROM ubuntu:17.10
 
 # INSTALL BASICS
+RUN echo "v3.0.0"
 RUN apt-get update
+RUN apt-get upgrade -y
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y vim git wget wireless-tools bluetooth iw net-tools tshark golang
 
 # CONFIGURE GO
