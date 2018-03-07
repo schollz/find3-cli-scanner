@@ -34,4 +34,3 @@ RUN bluetoothd --version
 # BUILD THE SCANNER
 WORKDIR /root/go/src/github.com/schollz/find3-cli-scanner
 RUN go build -v
-RUN go install -v
