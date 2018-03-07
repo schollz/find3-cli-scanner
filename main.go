@@ -21,6 +21,7 @@ var (
 	family, device, location string
 
 	scanSeconds            int
+	minimumThreshold       int
 	doBluetooth            bool
 	doReverse              bool
 	doDebug                bool
@@ -43,6 +44,7 @@ func main() {
 	flag.BoolVar(&doNotModifyPromiscuity, "no-modify", false, "disable changing wifi promiscuity mode")
 	flag.BoolVar(&runForever, "forever", false, "run forever")
 	flag.IntVar(&scanSeconds, "scantime", 10, "scan time")
+	flag.IntVar(&minimumThreshold, "min-rssi", -100, "minimum RSSI to use")
 	flag.Parse()
 
 	if doDebug {

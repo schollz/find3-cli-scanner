@@ -28,6 +28,9 @@ func iw(out chan map[string]map[string]interface{}) {
 			}
 		}
 		if name != "" && signal != 0 {
+			if signal < minimumThreshold {
+				continue
+			}
 			datas["wifi"][name] = signal
 		}
 	}

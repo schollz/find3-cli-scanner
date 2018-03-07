@@ -57,6 +57,9 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 			log.Error(err)
 			continue
 		}
+		if rssi < float64(minimumThreshold) {
+			continue
+		}
 		packet := Packet{}
 		packet.Timestamp = time.Unix(0, nanoSeconds)
 		packet.Mac = fields[1]

@@ -26,6 +26,9 @@ func scanBluetooth(out chan map[string]map[string]interface{}) {
 				log.Warn(err)
 				continue
 			}
+			if rssi < minimumThreshold {
+				continue
+			}
 			data["bluetooth"][strings.ToLower(macAddressRegex.FindString(line))] = rssi
 		}
 	}
