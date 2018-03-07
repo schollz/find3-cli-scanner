@@ -1,7 +1,7 @@
 # .goreleaser.yml
 # Build customization
 builds:
-  - binary: de0gee-scanner
+  - binary: find3-cli-scanner
     goos:
       - linux
     goarch:
