@@ -115,7 +115,7 @@ func reverseCapture() {
 		log.Error(err)
 		return
 	}
-	err = postData(payload, "/reverse")
+	err = postData(payload, "/passive")
 	if err != nil {
 		log.Error(err)
 	}
