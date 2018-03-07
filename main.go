@@ -37,7 +37,7 @@ func main() {
 	flag.StringVar(&device, "device", "", "device name")
 	flag.StringVar(&location, "location", "", "location (optional)")
 	flag.BoolVar(&doBluetooth, "bluetooth", false, "scan bluetooth")
-	flag.BoolVar(&doReverse, "reverse", false, "reverse fingerprinting")
+	flag.BoolVar(&doReverse, "passive", false, "passive scanning")
 	flag.BoolVar(&doDebug, "debug", false, "enable debugging")
 	flag.BoolVar(&doSetPromiscuous, "monitor-mode", false, "set promiscuous mode")
 	flag.BoolVar(&doNotModifyPromiscuity, "no-modify", false, "disable changing wifi promiscuity mode")
