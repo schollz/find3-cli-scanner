@@ -51,14 +51,14 @@ func main() {
 		setLogLevel("info")
 	}
 
-	if device == "" {
-		fmt.Println("device cannot be blank")
-		flag.Usage()
+	if doSetPromiscuous {
+		PromiscuousMode(true)
 		return
 	}
 
-	if doSetPromiscuous {
-		PromiscuousMode(true)
+	if device == "" {
+		fmt.Println("device cannot be blank")
+		flag.Usage()
 		return
 	}
 
