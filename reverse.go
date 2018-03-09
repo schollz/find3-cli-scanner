@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"path"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -14,7 +15,7 @@ import (
 
 type Packet struct {
 	Mac       string    `json:"mac"`
-	RSSI      float64   `json:"rssi"`
+	RSSI      int       `json:"rssi"`
 	Timestamp time.Time `json:"timestamp"`
 }
 
@@ -42,6 +43,9 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 		if len(fields) != 4 {
 			continue
 		}
+		if fields[2] != "ff:ff:ff:ff:ff:ff" {
+			continue
+		}
 
 		// determine time
 		timeSeconds, err := strconv.ParseFloat(fields[0], 64)
@@ -51,29 +55,32 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 		}
 		nanoSeconds := int64(timeSeconds * 1e9)
 
-		// determine rssi
-		rssi, err := strconv.ParseFloat(strings.Split(fields[3], ",")[0], 64)
-		if err != nil {
-			log.Error(err)
-			continue
-		}
-		if rssi < float64(minimumThreshold) {
-			continue
-		}
 		packet := Packet{}
 		packet.Timestamp = time.Unix(0, nanoSeconds)
 		packet.Mac = fields[1]
-		packet.RSSI = rssi
-		packets[i] = packet
-		i++
+		// determine rssi
+		rssiStrings := strings.Split(fields[3], ",")
+		for _, rssiString := range rssiStrings {
+			rssi, err := strconv.Atoi(rssiString)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+			if rssi < int(minimumThreshold) {
+				continue
+			}
+			packet.RSSI = int(rssi)
+			packets[i] = packet
+			i++
+		}
 	}
 	packets = packets[:i]
 
 	// merge packets
-	strengths := make(map[string][]float64)
+	strengths := make(map[string][]int)
 	for _, packet := range packets {
 		if _, ok := strengths[packet.Mac]; !ok {
-			strengths[packet.Mac] = []float64{}
+			strengths[packet.Mac] = []int{}
 		}
 		strengths[packet.Mac] = append(strengths[packet.Mac], packet.RSSI)
 	}
@@ -84,7 +91,15 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 		if _, ok := mergedPackets[packet.Mac]; ok {
 			continue
 		}
-		packet.RSSI = Average(strengths[packet.Mac])
+		// get median value
+		sort.Ints(strengths[packet.Mac])
+		if len(strengths[packet.Mac]) > 2 {
+			packet.RSSI = strengths[packet.Mac][len(strengths[packet.Mac])/2]
+		} else {
+			packet.RSSI = strengths[packet.Mac][0]
+		}
+		log.Debugf("%+v", strengths[packet.Mac])
+		log.Debugf("%+v", packet)
 		newPackets[i] = packet
 		i++
 		mergedPackets[packet.Mac] = struct{}{}
