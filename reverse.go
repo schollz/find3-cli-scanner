@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path"
 	"sort"
 	"strconv"
@@ -28,6 +29,7 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 
 	tempFileName := "tshark-" + RandomString(10)
 	tempFile := path.Join("/tmp", tempFileName)
+	defer os.Remove(tempFile)
 	log.Debugf("saving tshark data to %s", tempFile)
 
 	command := fmt.Sprintf("tshark -I -i %s -a duration:%d -w %s", wifiInterface, int(scanTime.Seconds()), tempFile)
