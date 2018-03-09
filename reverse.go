@@ -38,7 +38,7 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 
 	out, _ := RunCommand(scanTime+scanTime+scanTime+scanTime, "/usr/bin/tshark -r "+tempFile+" -T fields -e frame.time_epoch -e wlan.ta -e wlan.ra -e radiotap.dbm_antsignal")
 	lines := strings.Split(out, "\n")
-	packets := make([]Packet, len(lines))
+	packets := make([]Packet, 2*len(lines))
 	i := 0
 	for _, line := range lines {
 		fields := strings.Fields(line)
