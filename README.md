@@ -1,7 +1,11 @@
-# Command-line scanner
+[![](.github/find3-promo.png)](https://www.internalpositioning.com/)
 
+[![Read the docs]](https://img.shields.io/badge/read-docs-blue.svg?style=for-the-badge)](https://www.internalpositioning.com/doc) 
+[![Join slack](https://img.shields.io/badge/join-slack-orange.svg?style=for-the-badge)](https://join.slack.com/t/find3/shared_invite/enQtMzI0MjkwMjc3MDYzLWJiZWEzZjU5NTljM2JlYmE1MDY0NThiYmY2NDYwNGYxNTNmNTJjZjFmNjMwNGMwY2UyNzczNzZhZTIxZWY3ODQ) 
+[![Docker build status](https://img.shields.io/docker/build/schollz/find3-cli-scanner.svg?style=for-the-badge)](https://hub.docker.com/r/schollz/find3-cli-scanner/) 
+[![Donate](https://img.shields.io/badge/beerpay-$5-brown.svg?style=for-the-badge)](https://www.buymeacoffee.com/schollz)
 
-The command-line scanner provides a means for your laptop your computer to monitor the address and signal of nearby WiFi and bluetooth devices (*active scanning*). Also, if equipped with a monitor-mode enabled WiFI card, you can use the scanner to intercept probe requests to do *passive scanning*.
+**The Framework for Internal Navigation and Discovery** (_FIND_) is like indoor GPS for your house or business, using only a simple smartphone or laptop. This command-line scanner provides a means for your laptop your computer to monitor the address and signal of nearby WiFi and bluetooth devices (*active scanning*). Also, if equipped with a monitor-mode enabled WiFI card, you can use the scanner to intercept probe requests to do *passive scanning*.
 
 ## Install
 
