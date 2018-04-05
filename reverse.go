@@ -72,7 +72,11 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 				continue
 			}
 			packet.RSSI = int(rssi)
-			packets[i] = packet
+			if i > len(packets) {
+				packets = append(packets, packet)
+			} else {
+				packets[i] = packet
+			}
 			i++
 		}
 	}
