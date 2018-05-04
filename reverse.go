@@ -12,6 +12,7 @@ import (
 
 	log "github.com/cihub/seelog"
 	"github.com/schollz/find3/server/main/src/models"
+	"github.com/schollz/find3/server/main/src/utils"
 )
 
 type Packet struct {
@@ -46,6 +47,10 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 			continue
 		}
 		if fields[2] != "ff:ff:ff:ff:ff:ff" {
+			continue
+		}
+
+		if doIgnoreRandomizedMacs && utils.IsMacRandomized(fields[1]) {
 			continue
 		}
 
