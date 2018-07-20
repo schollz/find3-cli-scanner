@@ -79,6 +79,7 @@ func main() {
 	}
 
 	for {
+
 		if doWifi {
 			log.Infof("scanning with %s", wifiInterface)
 		}
@@ -88,7 +89,7 @@ func main() {
 		if !doReverse {
 			err = basicCapture()
 		} else {
-			log.Infof("reverse scanning with %s", wifiInterface)
+			log.Info("working in passive mode")
 			err = reverseCapture()
 		}
 		if !runForever {
