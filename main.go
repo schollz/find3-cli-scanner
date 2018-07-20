@@ -35,7 +35,7 @@ func main() {
 	var err error
 	defer log.Flush()
 	flag.StringVar(&wifiInterface, "i", "wlan0", "wifi interface for scanning")
-	flag.StringVar(&server, "server", "http://localhost:8003", "server to use")
+	flag.StringVar(&server, "server", "https://cloud.internalpositioning.com", "server to use")
 	flag.StringVar(&family, "family", "", "family name")
 	flag.StringVar(&device, "device", "", "device name")
 	flag.StringVar(&location, "location", "", "location (optional)")
@@ -66,7 +66,7 @@ func main() {
 		return
 	}
 
-	if device == "" && doWifi {
+	if device == "" {
 		fmt.Println("device cannot be blank")
 		flag.Usage()
 		return
