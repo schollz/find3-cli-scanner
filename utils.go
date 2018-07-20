@@ -24,6 +24,7 @@ func RunCommand(tDuration time.Duration, commands string) (string, string) {
 	err := cmd.Start()
 	if err != nil {
 		log.Error(err)
+		os.Exit(1)
 	}
 	done := make(chan error, 1)
 	go func() {
