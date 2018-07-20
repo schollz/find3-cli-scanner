@@ -23,6 +23,7 @@ var (
 	scanSeconds            int
 	minimumThreshold       int
 	doBluetooth            bool
+	doWifi                 bool
 	doReverse              bool
 	doDebug                bool
 	doSetPromiscuous       bool
@@ -31,6 +32,7 @@ var (
 )
 
 func main() {
+	var err error
 	defer log.Flush()
 	flag.StringVar(&wifiInterface, "i", "wlan0", "wifi interface for scanning")
 	flag.StringVar(&server, "server", "http://localhost:8003", "server to use")
@@ -38,6 +40,7 @@ func main() {
 	flag.StringVar(&device, "device", "", "device name")
 	flag.StringVar(&location, "location", "", "location (optional)")
 	flag.BoolVar(&doBluetooth, "bluetooth", false, "scan bluetooth")
+	flag.BoolVar(&doWifi, "wifi", false, "scan wifi")
 	flag.BoolVar(&doReverse, "passive", false, "passive scanning")
 	flag.BoolVar(&doDebug, "debug", false, "enable debugging")
 	flag.BoolVar(&doSetPromiscuous, "monitor-mode", false, "set promiscuous mode")
@@ -53,12 +56,17 @@ func main() {
 		setLogLevel("info")
 	}
 
+	// ensure backwards compatibility
+	if !doBluetooth && !doWifi {
+		doWifi = true
+	}
+
 	if doSetPromiscuous {
 		PromiscuousMode(true)
 		return
 	}
 
-	if device == "" {
+	if device == "" && doWifi {
 		fmt.Println("device cannot be blank")
 		flag.Usage()
 		return
@@ -71,35 +79,57 @@ func main() {
 	}
 
 	for {
-		if !doReverse {
+		if doWifi {
 			log.Infof("scanning with %s", wifiInterface)
-			basicCapture()
+		}
+		if doBluetooth {
+			log.Infof("scanning bluetooth")
+		}
+		if !doReverse {
+			err = basicCapture()
 		} else {
 			log.Infof("reverse scanning with %s", wifiInterface)
-			reverseCapture()
+			err = reverseCapture()
 		}
 		if !runForever {
 			break
+		} else if err != nil {
+			log.Warn(err)
 		}
+	}
+	if err != nil {
+		log.Error(err)
 	}
 }
 
-func reverseCapture() {
+func reverseCapture() (err error) {
 
 	c := make(chan map[string]map[string]interface{})
 	if doBluetooth {
 		go scanBluetooth(c)
 	}
 
-	if !doNotModifyPromiscuity {
-		PromiscuousMode(true)
-		time.Sleep(1 * time.Second)
+	payload := models.SensorData{}
+	payload.Family = family
+	payload.Device = device
+	payload.Timestamp = time.Now().UnixNano() / int64(time.Millisecond)
+	payload.Sensors = make(map[string]map[string]interface{})
+
+	if doWifi {
+		if !doNotModifyPromiscuity {
+			PromiscuousMode(true)
+			time.Sleep(1 * time.Second)
+		}
+		payload, err = ReverseScan(time.Duration(scanSeconds) * time.Second)
+		if err != nil {
+			return
+		}
+		if !doNotModifyPromiscuity {
+			PromiscuousMode(false)
+			time.Sleep(1 * time.Second)
+		}
 	}
-	payload, err := ReverseScan(time.Duration(scanSeconds) * time.Second)
-	if !doNotModifyPromiscuity {
-		PromiscuousMode(false)
-		time.Sleep(1 * time.Second)
-	}
+
 	if doBluetooth {
 		data := <-c
 		log.Debugf("bluetooth data:%+v", data)
@@ -113,17 +143,11 @@ func reverseCapture() {
 	bSensors, _ := json.MarshalIndent(payload, "", " ")
 	log.Debug(string(bSensors))
 
-	if err != nil {
-		log.Error(err)
-		return
-	}
 	err = postData(payload, "/passive")
-	if err != nil {
-		log.Error(err)
-	}
+	return
 }
 
-func basicCapture() {
+func basicCapture() (err error) {
 	payload := models.SensorData{}
 	payload.Timestamp = time.Now().UnixNano() / int64(time.Millisecond)
 	payload.Family = family
@@ -135,8 +159,10 @@ func basicCapture() {
 	c := make(chan map[string]map[string]interface{})
 	numSensors := 0
 
-	go iw(c)
-	numSensors++
+	if doWifi {
+		go iw(c)
+		numSensors++
+	}
 
 	if doBluetooth {
 		go scanBluetooth(c)
@@ -154,15 +180,17 @@ func basicCapture() {
 	}
 
 	if len(payload.Sensors) == 0 {
-		log.Error(errors.New("collected no data"))
+		err = errors.New("collected no data")
 		return
 	}
 	bPayload, err := json.MarshalIndent(payload, "", " ")
+	if err != nil {
+		return
+	}
+
 	log.Debug(string(bPayload))
 	err = postData(payload, "/data")
-	if err != nil {
-		log.Error(err)
-	}
+	return
 }
 
 // this doesn't work, just playing
