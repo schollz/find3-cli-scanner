@@ -32,12 +32,12 @@ func RunCommand(tDuration time.Duration, commands string) (string, string) {
 	select {
 	case <-time.After(tDuration):
 		if err := cmd.Process.Kill(); err != nil {
-			log.Error("failed to kill: ", err)
+			log.Debug("failed to kill: ", err)
 		}
 		log.Debugf("%s killed as timeout reached", commands)
 	case err := <-done:
 		if err != nil {
-			log.Errorf("%s: %s", err.Error(), commands)
+			log.Debugf("err running %s: %s", commands, err.Error())
 		} else {
 			log.Debugf("%s done gracefully without error", commands)
 		}
