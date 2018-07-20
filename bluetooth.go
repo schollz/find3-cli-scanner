@@ -1,14 +1,12 @@
 package main
 
 import (
-	"context"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	log "github.com/cihub/seelog"
-	"github.com/currantlabs/ble"
-	"github.com/currantlabs/ble/examples/lib/dev"
 )
 
 // sudo apt-get install bluez
