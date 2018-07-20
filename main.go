@@ -28,6 +28,7 @@ var (
 	doDebug                bool
 	doSetPromiscuous       bool
 	doNotModifyPromiscuity bool
+	doIgnoreRandomizedMacs bool
 	runForever             bool
 )
 
@@ -45,6 +46,7 @@ func main() {
 	flag.BoolVar(&doDebug, "debug", false, "enable debugging")
 	flag.BoolVar(&doSetPromiscuous, "monitor-mode", false, "set promiscuous mode")
 	flag.BoolVar(&doNotModifyPromiscuity, "no-modify", false, "disable changing wifi promiscuity mode")
+	flag.BoolVar(&doIgnoreRandomizedMacs, "no-randomized-macs", false, "ignore randomized MAC addresses")
 	flag.BoolVar(&runForever, "forever", false, "run forever")
 	flag.IntVar(&scanSeconds, "scantime", 40, "scan time")
 	flag.IntVar(&minimumThreshold, "min-rssi", -100, "minimum RSSI to use")
