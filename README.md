@@ -41,10 +41,10 @@ $ docker run --net="host" --privileged --name scanner -d -i -t schollz/find3-cli
 To use the scanner, your syntax will be
 
 ```
-$ docker exec scanner sh -c "find3-cli-scanner ..."
+$ docker exec scanner sh -c "find3-cli-scanner -device DEVICE -family FAMILY -wifi -bluetooth -forever"
 ```
 
-where "`...`" are the flags. Use `-help` to see which flags are available.
+Be sure to use your own device/family name. Use `-help` to see which flags are available.
 
 You can start/stop the image using
 
