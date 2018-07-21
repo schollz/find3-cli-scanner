@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -12,10 +12,14 @@ import (
 	log "github.com/cihub/seelog"
 	"github.com/montanaflynn/stats"
 	"github.com/schollz/find3/server/main/src/models"
+	"github.com/urfave/cli"
 )
 
 var (
 	wifiInterface string
+	version       string
+	commit        string
+	date          string
 
 	server                   string
 	family, device, location string
@@ -33,76 +37,156 @@ var (
 )
 
 func main() {
-	var err error
 	defer log.Flush()
-	flag.StringVar(&wifiInterface, "i", "wlan0", "wifi interface for scanning")
-	flag.StringVar(&server, "server", "https://cloud.internalpositioning.com", "server to use")
-	flag.StringVar(&family, "family", "", "family name")
-	flag.StringVar(&device, "device", "", "device name")
-	flag.StringVar(&location, "location", "", "location (optional)")
-	flag.BoolVar(&doBluetooth, "bluetooth", false, "scan bluetooth")
-	flag.BoolVar(&doWifi, "wifi", false, "scan wifi")
-	flag.BoolVar(&doReverse, "passive", false, "passive scanning")
-	flag.BoolVar(&doDebug, "debug", false, "enable debugging")
-	flag.BoolVar(&doSetPromiscuous, "monitor-mode", false, "set promiscuous mode")
-	flag.BoolVar(&doNotModifyPromiscuity, "no-modify", false, "disable changing wifi promiscuity mode")
-	flag.BoolVar(&doIgnoreRandomizedMacs, "no-randomized-macs", false, "ignore randomized MAC addresses")
-	flag.BoolVar(&runForever, "forever", false, "run forever")
-	flag.IntVar(&scanSeconds, "scantime", 40, "scan time")
-	flag.IntVar(&minimumThreshold, "min-rssi", -100, "minimum RSSI to use")
-	flag.Parse()
-
-	if doDebug {
-		setLogLevel("debug")
-	} else {
-		setLogLevel("info")
+	app := cli.NewApp()
+	app.Name = "find3-cli-scanner"
+	app.Version = fmt.Sprintf("%s (%s %s)", version, commit, date)
+	app.Usage = "this command line scanner works with FIND3\n\t\tto capture bluetooth and WiFi signals from devices"
+	app.Authors = []cli.Author{
+		cli.Author{
+			Name:  "Zack Scholl",
+			Email: "zack.scholl@gmail.com",
+		},
 	}
-
-	// ensure backwards compatibility
-	if !doBluetooth && !doWifi {
-		doWifi = true
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:  "bluetooth",
+			Usage: "scan bluetooth",
+		},
+		cli.BoolFlag{
+			Name:  "wifi",
+			Usage: "scan wifi",
+		},
+		cli.StringFlag{
+			Name:  "server",
+			Value: "https://cloud.internalpositioning.com",
+			Usage: "FIND3 server for submitting fingerprints",
+		},
+		cli.StringFlag{
+			Name:  "interface,i",
+			Value: "wlan0",
+			Usage: "wifi interface for scanning",
+		},
+		cli.StringFlag{
+			Name:  "family,f",
+			Value: "",
+			Usage: "family name",
+		},
+		cli.StringFlag{
+			Name:  "device,d",
+			Value: "",
+			Usage: "device name",
+		},
+		cli.StringFlag{
+			Name:  "location,l",
+			Value: "",
+			Usage: "location name (automatically toggles learning)",
+		},
+		cli.BoolFlag{
+			Name:  "passive",
+			Usage: "enable passive scanning",
+		},
+		cli.BoolFlag{
+			Name:  "debug",
+			Usage: "enable debug mode",
+		},
+		cli.BoolFlag{
+			Name:  "monitor-mode",
+			Usage: "enable monitor mode (turn promiscuous mode on)",
+		},
+		cli.BoolFlag{
+			Name:  "disable-monitor-mode",
+			Usage: "disable monitor mode (turn promiscuous mode off)",
+		},
+		cli.BoolFlag{
+			Name:  "no-modify",
+			Usage: "disable changing wifi promiscuity mode",
+		},
+		cli.BoolFlag{
+			Name:  "no-randomized-macs",
+			Usage: "ignore randomized MAC addresses",
+		},
+		cli.BoolFlag{
+			Name:  "forever",
+			Usage: "run until Ctl+C signal",
+		},
+		cli.IntFlag{
+			Name:  "min-rssi",
+			Value: -100,
+			Usage: "minimum RSSI to use",
+		},
+		cli.IntFlag{
+			Name:  "scantime,s",
+			Value: 40,
+			Usage: "minimum RSSI to use",
+		},
 	}
+	app.Action = func(c *cli.Context) (err error) {
+		// set variables
+		server = c.GlobalString("server")
+		family = c.GlobalString("family")
+		device = c.GlobalString("device")
+		wifiInterface = c.GlobalString("interface")
+		location = c.GlobalString("location")
+		doBluetooth = c.GlobalBool("bluetooth")
+		doWifi = c.GlobalBool("wifi")
+		doReverse = c.GlobalBool("passive")
+		doDebug = c.GlobalBool("debug")
+		doSetPromiscuous = c.GlobalBool("monitor-mode")
+		doNotModifyPromiscuity = c.GlobalBool("no-modify")
+		doIgnoreRandomizedMacs = c.GlobalBool("no-randomized-macs")
+		runForever = c.GlobalBool("forever")
+		scanSeconds = c.GlobalInt("scantime")
+		minimumThreshold = c.GlobalInt("min-rssi")
 
-	if doSetPromiscuous {
-		PromiscuousMode(true)
-		return
-	}
-
-	if device == "" {
-		fmt.Println("device cannot be blank")
-		flag.Usage()
-		return
-	}
-
-	if family == "" {
-		fmt.Println("family cannot be blank")
-		flag.Usage()
-		return
-	}
-
-	for {
-
-		if doWifi {
-			log.Infof("scanning with %s", wifiInterface)
-		}
-		if doBluetooth {
-			log.Infof("scanning bluetooth")
-		}
-		if !doReverse {
-			err = basicCapture()
+		if doDebug {
+			setLogLevel("debug")
 		} else {
-			log.Info("working in passive mode")
-			err = reverseCapture()
+			setLogLevel("info")
 		}
-		if !runForever {
-			break
-		} else if err != nil {
-			log.Warn(err)
+
+		// ensure backwards compatibility
+		if !doBluetooth && !doWifi {
+			doWifi = true
 		}
+
+		if doSetPromiscuous {
+			PromiscuousMode(true)
+			return
+		}
+
+		if device == "" {
+			return errors.New("device cannot be blank (set with -d)")
+		} else if family == "" {
+			return errors.New("family cannot be blank (set with -f)")
+		}
+
+		for {
+			if doWifi {
+				log.Infof("scanning with %s", wifiInterface)
+			}
+			if doBluetooth {
+				log.Infof("scanning bluetooth")
+			}
+			if !doReverse {
+				err = basicCapture()
+			} else {
+				log.Info("working in passive mode")
+				err = reverseCapture()
+			}
+			if !runForever {
+				break
+			} else if err != nil {
+				log.Warn(err)
+			}
+		}
+		return
 	}
+	err := app.Run(os.Args)
 	if err != nil {
 		log.Error(err)
 	}
+
 }
 
 func reverseCapture() (err error) {
