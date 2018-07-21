@@ -40,6 +40,9 @@ func main() {
 	defer log.Flush()
 	app := cli.NewApp()
 	app.Name = "find3-cli-scanner"
+	if len(commit) > 6 {
+		commit = commit[:6]
+	}
 	app.Version = fmt.Sprintf("%s (%s %s)", version, commit, date)
 	app.Usage = "this command line scanner works with FIND3\n\t\tto capture bluetooth and WiFi signals from devices"
 	app.Authors = []cli.Author{
@@ -118,7 +121,7 @@ func main() {
 		cli.IntFlag{
 			Name:  "scantime,s",
 			Value: 40,
-			Usage: "minimum RSSI to use",
+			Usage: "number of seconds to scan",
 		},
 	}
 	app.Action = func(c *cli.Context) (err error) {
