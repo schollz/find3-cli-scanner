@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -30,6 +31,7 @@ var (
 	doWifi                 bool
 	doReverse              bool
 	doDebug                bool
+	doGPS                  bool
 	doSetPromiscuous       bool
 	doNotModifyPromiscuity bool
 	doIgnoreRandomizedMacs bool
@@ -86,6 +88,10 @@ func main() {
 			Usage: "location name (automatically toggles learning)",
 		},
 		cli.BoolFlag{
+			Name:  "gps",
+			Usage: "enable gps collection (using wifi)",
+		},
+		cli.BoolFlag{
 			Name:  "passive",
 			Usage: "enable passive scanning",
 		},
@@ -135,6 +141,7 @@ func main() {
 		doWifi = c.GlobalBool("wifi")
 		doReverse = c.GlobalBool("passive")
 		doDebug = c.GlobalBool("debug")
+		doGPS = c.GlobalBool("gps")
 		doSetPromiscuous = c.GlobalBool("monitor-mode")
 		doNotModifyPromiscuity = c.GlobalBool("no-modify")
 		doIgnoreRandomizedMacs = c.GlobalBool("no-randomized-macs")
@@ -273,6 +280,49 @@ func basicCapture() (err error) {
 		err = errors.New("collected no data")
 		return
 	}
+
+	if _, ok := payload.Sensors["wifi"]; ok && doGPS {
+		acquired := 0.0
+		for device := range payload.Sensors["wifi"] {
+			lat, lon := func() (lat, lon float64) {
+				type MacData struct {
+					Ready      bool    `json:"ready"`
+					MacAddress string  `json:"mac"`
+					Exists     bool    `json:"exists"`
+					Latitude   float64 `json:"lat,omitempty"`
+					Longitude  float64 `json:"lon,omitempty"`
+					Error      string  `json:"err,omitempty"`
+				}
+				var md MacData
+				resp, err := http.Get("https://mac2gps.schollz.com/" + device)
+				if err != nil {
+					return
+				}
+				defer resp.Body.Close()
+
+				err = json.NewDecoder(resp.Body).Decode(&md)
+				if err != nil {
+					return
+				}
+				lat = md.Latitude
+				lon = md.Longitude
+				if md.Ready && md.Exists {
+					log.Debugf("found GPS: %+v", md)
+				}
+				return
+			}()
+			if lat != 0 {
+				acquired++
+			}
+			payload.GPS.Latitude += lat
+			payload.GPS.Longitude += lon
+		}
+		if acquired > 0 {
+			payload.GPS.Latitude = payload.GPS.Latitude / acquired
+			payload.GPS.Longitude = payload.GPS.Longitude / acquired
+		}
+	}
+
 	bPayload, err := json.MarshalIndent(payload, "", " ")
 	if err != nil {
 		return

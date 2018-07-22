@@ -34,5 +34,6 @@ func iw(out chan map[string]map[string]interface{}) {
 			datas["wifi"][name] = signal
 		}
 	}
+
 	out <- datas
 }
