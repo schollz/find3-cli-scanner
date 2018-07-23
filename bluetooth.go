@@ -42,7 +42,7 @@ func hcitoolLescan() {
 
 func btmgmtFind() string {
 	for i := 0; i < 30; i++ {
-		stdOut, stdErr := RunCommand(20*time.Second, "btmgmt find")
+		stdOut, stdErr := RunCommand(time.Duration(scanSeconds)*time.Second, "btmgmt find")
 		if !strings.Contains(stdErr, "Unable to start") && len(stdOut) != 0 {
 			log.Debug("finished btmgmt find")
 			return stdOut

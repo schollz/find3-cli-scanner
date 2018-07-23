@@ -7,7 +7,7 @@ import (
 )
 
 func iw(out chan map[string]map[string]interface{}) {
-	s, _ := RunCommand(10*time.Second, "/sbin/iw dev "+wifiInterface+" scan -u")
+	s, _ := RunCommand(time.Duration(scanSeconds)*time.Second, "/sbin/iw dev "+wifiInterface+" scan -u")
 	name := ""
 	signal := 0
 	datas := make(map[string]map[string]interface{})
