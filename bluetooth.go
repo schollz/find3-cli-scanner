@@ -1,61 +1,48 @@
 package main
 
 import (
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
 	log "github.com/cihub/seelog"
+	"github.com/schollz/gatt"
 )
 
-// sudo apt-get install bluez
-// use btmgmt find instead
-var negativeNumberRegex = regexp.MustCompile(`-\d+`)
-var macAddressRegex = regexp.MustCompile(`([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})`)
+var bdata map[string]map[string]interface{}
+
+func onStateChanged(d gatt.Device, s gatt.State) {
+	switch s {
+	case gatt.StatePoweredOn:
+		log.Debug("gatt powered on")
+		d.Scan([]gatt.UUID{}, false)
+		return
+	default:
+		d.StopScanning()
+	}
+}
+
+func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
+	bdata["bluetooth"][strings.ToLower(p.ID())] = rssi
+}
 
 func scanBluetooth(out chan map[string]map[string]interface{}) {
-	log.Info("scanning bluetooth")
-	s := btmgmtFind()
-	data := make(map[string]map[string]interface{})
-	data["bluetooth"] = make(map[string]interface{})
-	for _, line := range strings.Split(s, "\n") {
-		if negativeNumberRegex.MatchString(line) && macAddressRegex.MatchString(line) {
-			rssi, err := strconv.Atoi(negativeNumberRegex.FindString(line))
-			if err != nil {
-				log.Warn(err)
-				continue
-			}
-			if rssi < minimumThreshold {
-				continue
-			}
-			data["bluetooth"][strings.ToLower(macAddressRegex.FindString(line))] = rssi
-		}
+	log.Debug("scanning bluetooth")
+
+	bdata = make(map[string]map[string]interface{})
+	bdata["bluetooth"] = make(map[string]interface{})
+
+	d, err := gatt.NewDevice()
+	if err != nil {
+		log.Error("Failed to open device, err: %s", err)
+		return
 	}
-	out <- data
-}
-
-func hcitoolLescan() {
-	RunCommand(4000*time.Millisecond, "hcitool lescan")
-	log.Debug("finished lescan")
-}
-
-func btmgmtFind() string {
-	for i := 0; i < 30; i++ {
-		stdOut, stdErr := RunCommand(time.Duration(scanSeconds)*time.Second, "btmgmt find")
-		if !strings.Contains(stdErr, "Unable to start") && len(stdOut) != 0 {
-			log.Debug("finished btmgmt find")
-			return stdOut
-		}
-		RunCommand(20*time.Second, "service bluetooth restart")
-		time.Sleep(2 * time.Second)
+	// Register handlers.
+	d.Handle(gatt.PeripheralDiscovered(onPeriphDiscovered))
+	d.Init(onStateChanged)
+	select {
+	case <-time.After(time.Duration(scanSeconds) * time.Second):
+		log.Debug("bluetooth scan finished")
 	}
-	return ""
-}
 
-func btmon(out chan string) {
-	s, t := RunCommand(8000*time.Millisecond, "btmon")
-	log.Debug("finished btmon")
-	out <- s
-	out <- t
+	out <- bdata
 }
