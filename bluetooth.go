@@ -28,7 +28,7 @@ func scanBluetooth(out chan map[string]map[string]interface{}) {
 	log.Info("scanning bluetooth")
 
 	bdata = make(map[string]map[string]interface{})
-	data["bluetooth"] = make(map[string]interface{})
+	bdata["bluetooth"] = make(map[string]interface{})
 
 	d, err := gatt.NewDevice()
 	if err != nil {
@@ -43,5 +43,5 @@ func scanBluetooth(out chan map[string]map[string]interface{}) {
 		log.Debug("bluetooth scan finished")
 	}
 
-	out <- data
+	out <- bdata
 }
