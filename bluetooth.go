@@ -9,6 +9,7 @@ import (
 )
 
 func scanBluetooth(out chan map[string]map[string]interface{}) {
+	gatt.Debug = false
 	log.Info("scanning bluetooth")
 
 	data := make(map[string]map[string]interface{})
