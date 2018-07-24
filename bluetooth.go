@@ -1,34 +1,32 @@
 package main
 
 import (
-	"strings"
+	"fmt"
 	"time"
 
 	log "github.com/cihub/seelog"
 	"github.com/paypal/gatt"
 )
 
+func onStateChanged(d gatt.Device, s gatt.State) {
+	switch s {
+	case gatt.StatePoweredOn:
+		d.Scan([]gatt.UUID{}, false)
+		return
+	default:
+		d.StopScanning()
+	}
+}
+
+func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
+	fmt.Printf("\nPeripheral ID: %s %d\n", p.ID(), rssi)
+}
+
 func scanBluetooth(out chan map[string]map[string]interface{}) {
-	gatt.Debug = false
 	log.Info("scanning bluetooth")
 
 	data := make(map[string]map[string]interface{})
 	data["bluetooth"] = make(map[string]interface{})
-
-	onStateChanged := func(d gatt.Device, s gatt.State) {
-		log.Debug("State:", s)
-		switch s {
-		case gatt.StatePoweredOn:
-			log.Debug("scanning...")
-			d.Scan([]gatt.UUID{}, false)
-			return
-		default:
-			d.StopScanning()
-		}
-	}
-	onPeriphDiscovered := func(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
-		data["bluetooth"][strings.ToLower(p.ID())] = rssi
-	}
 
 	d, err := gatt.NewDevice()
 	if err != nil {
