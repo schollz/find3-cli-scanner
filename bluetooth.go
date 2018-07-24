@@ -13,6 +13,7 @@ var bdata map[string]map[string]interface{}
 func onStateChanged(d gatt.Device, s gatt.State) {
 	switch s {
 	case gatt.StatePoweredOn:
+		log.Debug("gatt powered on")
 		d.Scan([]gatt.UUID{}, false)
 		return
 	default:
@@ -25,14 +26,14 @@ func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
 }
 
 func scanBluetooth(out chan map[string]map[string]interface{}) {
-	log.Info("scanning bluetooth")
+	log.Debug("scanning bluetooth")
 
 	bdata = make(map[string]map[string]interface{})
 	bdata["bluetooth"] = make(map[string]interface{})
 
 	d, err := gatt.NewDevice()
 	if err != nil {
-		log.Error("Failed to open device, err: %s\n", err)
+		log.Error("Failed to open device, err: %s", err)
 		return
 	}
 	// Register handlers.
