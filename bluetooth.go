@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -16,10 +15,10 @@ func scanBluetooth(out chan map[string]map[string]interface{}) {
 	data["bluetooth"] = make(map[string]interface{})
 
 	onStateChanged := func(d gatt.Device, s gatt.State) {
-		fmt.Println("State:", s)
+		log.Debug("State:", s)
 		switch s {
 		case gatt.StatePoweredOn:
-			fmt.Println("scanning...")
+			log.Debug("scanning...")
 			d.Scan([]gatt.UUID{}, false)
 			return
 		default:
