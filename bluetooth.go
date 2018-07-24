@@ -21,7 +21,7 @@ func onStateChanged(d gatt.Device, s gatt.State) {
 }
 
 func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
-	bdata[strings.ToLower(p.ID())] = rssi
+	bdata["bluetooth"][strings.ToLower(p.ID())] = rssi
 }
 
 func scanBluetooth(out chan map[string]map[string]interface{}) {
