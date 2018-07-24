@@ -1,12 +1,14 @@
 package main
 
 import (
-	"fmt"
+	"strings"
 	"time"
 
 	log "github.com/cihub/seelog"
-	"github.com/paypal/gatt"
+	"github.com/schollz/gatt"
 )
+
+var bdata map[string]map[string]interface{}
 
 func onStateChanged(d gatt.Device, s gatt.State) {
 	switch s {
@@ -19,13 +21,13 @@ func onStateChanged(d gatt.Device, s gatt.State) {
 }
 
 func onPeriphDiscovered(p gatt.Peripheral, a *gatt.Advertisement, rssi int) {
-	fmt.Printf("\nPeripheral ID: %s %d\n", p.ID(), rssi)
+	bdata[strings.ToLower(p.ID())] = rssi
 }
 
 func scanBluetooth(out chan map[string]map[string]interface{}) {
 	log.Info("scanning bluetooth")
 
-	data := make(map[string]map[string]interface{})
+	bdata = make(map[string]map[string]interface{})
 	data["bluetooth"] = make(map[string]interface{})
 
 	d, err := gatt.NewDevice()
