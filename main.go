@@ -133,7 +133,7 @@ func main() {
 	app.Action = func(c *cli.Context) (err error) {
 		// set variables
 		server = c.GlobalString("server")
-		family = c.GlobalString("family")
+		family = strings.ToLower(c.GlobalString("family"))
 		device = c.GlobalString("device")
 		wifiInterface = c.GlobalString("interface")
 		location = c.GlobalString("location")
@@ -153,6 +153,12 @@ func main() {
 			setLogLevel("debug")
 		} else {
 			setLogLevel("info")
+		}
+
+		// make sure is sudo
+		if os.Getenv("SUDO_USER") == "" {
+			err = errors.New("need to run with sudo")
+			return
 		}
 
 		// ensure backwards compatibility
