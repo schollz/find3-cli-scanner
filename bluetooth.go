@@ -32,23 +32,24 @@ var d gatt.Device
 var bluetoothInitiated bool
 
 func scanBluetooth(out chan map[string]map[string]interface{}) (err error) {
+	log.Debug("scanning bluetooth")
+	bdatasync.Lock()
+	bdata = make(map[string]map[string]interface{})
+	bdata["bluetooth"] = make(map[string]interface{})
+	bdatasync.Unlock()
+
 	if !bluetoothInitiated {
 		log.Debug("initiating bluetooth")
 		d, err = gatt.NewDevice()
 		if err != nil {
-			log.Debug("Failed to open device, err: %s", err.Error())
+			log.Debugf("Failed to open device, err: %s", err.Error())
+			out <- bdata
 			return
 		}
 		d.Handle(gatt.PeripheralDiscovered(onPeriphDiscovered))
 		d.Init(onStateChanged)
 		bluetoothInitiated = true
 	}
-
-	log.Debug("scanning bluetooth")
-	bdatasync.Lock()
-	bdata = make(map[string]map[string]interface{})
-	bdata["bluetooth"] = make(map[string]interface{})
-	bdatasync.Unlock()
 
 	d.Scan([]gatt.UUID{}, false)
 	select {

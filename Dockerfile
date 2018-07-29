@@ -1,5 +1,4 @@
 FROM ubuntu:18.04
-
 ENV GOLANG_VERSION 1.10
 ENV PATH="/usr/local/go/bin:${PATH}"
 ENV GOPATH /root/go
