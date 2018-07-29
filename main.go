@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/user"
 	"strconv"
 	"strings"
 	"time"
@@ -48,7 +49,7 @@ func main() {
 	app.Version = fmt.Sprintf("%s (%s %s)", version, commit, date)
 	app.Usage = "this command line scanner works with FIND3\n\t\tto capture bluetooth and WiFi signals from devices"
 	app.Authors = []cli.Author{
-		cli.Author{
+		{
 			Name:  "Zack Scholl",
 			Email: "zack.scholl@gmail.com",
 		},
@@ -148,7 +149,6 @@ func main() {
 		runForever = c.GlobalBool("forever")
 		scanSeconds = c.GlobalInt("scantime")
 		minimumThreshold = c.GlobalInt("min-rssi")
-
 		if doDebug {
 			setLogLevel("debug")
 		} else {
@@ -157,8 +157,12 @@ func main() {
 
 		// make sure is sudo
 		if os.Getenv("SUDO_USER") == "" {
-			err = errors.New("need to run with sudo")
-			return
+			user, usererr := user.Current()
+			if usererr == nil && user.Name != "root" {
+				err = errors.New("need to run with sudo")
+				return
+
+			}
 		}
 
 		// ensure backwards compatibility
