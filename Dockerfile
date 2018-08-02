@@ -3,7 +3,7 @@ ENV GOLANG_VERSION 1.10
 ENV PATH="/usr/local/go/bin:${PATH}"
 ENV GOPATH /root/go
 RUN apt-get update && \
-	DEBIAN_FRONTEND=noninteractive apt-get install -y libc6-dev make pkg-config g++ gcc git wget wireless-tools bluetooth iw net-tools tshark && \
+	DEBIAN_FRONTEND=noninteractive apt-get install -y libc6-dev make pkg-config g++ gcc git wget wireless-tools bluetooth iw net-tools libpcap-dev && \
 	mkdir /root/go && \
 	rm -rf /var/lib/apt/lists/* && \
 	set -eux; \
@@ -37,14 +37,17 @@ RUN apt-get update && \
 	\
 	export PATH="/usr/local/go/bin:$PATH"; \
 	go version && \
-	go get -v github.com/schollz/find3-cli-scanner && \
-	cd /root/go/src/github.com/schollz/find3-cli-scanner && go build -v && \
+	go get -u -v -d github.com/schollz/find3-cli-scanner && \
+	go get -u -v -d github.com/google/gopacket/... && \
+	cd /root/go/src/github.com/schollz/find3-cli-scanner && \
+	git checkout noshark && go build -v && \
 	mv find3-cli-scanner /usr/local/bin/ && \
-	echo "removing go srces" && rm -rf /usr/local/work/src && \
+	echo "removing go resources" && rm -rf /usr/local/work/src && \
 	echo "purging packages" && apt-get remove -y --auto-remove git libc6-dev pkg-config g++ gcc make && \
+	echo "add back pcap" && apt-get update && apt-get install -y libpcap-dev && \
 	echo "autoclean" && apt-get autoclean && \
 	echo "clean" && apt-get clean && \
-	echo "autoremove" && apt-get autoremove && \
+	echo "autoremove" && apt-get autoremove -y && \
 	echo "rm trash" && rm -rf ~/.local/share/Trash/* && \
 	echo "rm go" && rm -rf /usr/local/go* && \
 	echo "rm go" && rm -rf /root/go* && \
