@@ -2,19 +2,18 @@ package main
 
 import (
 	"errors"
-	"fmt"
-	"os"
-	"path"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
 	log "github.com/cihub/seelog"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/pcap"
 	"github.com/schollz/find3/server/main/src/models"
-	"github.com/schollz/find3/server/main/src/utils"
 )
 
+// Packet is the struct for the reverse scanning
 type Packet struct {
 	Mac       string    `json:"mac"`
 	RSSI      int       `json:"rssi"`
@@ -22,70 +21,64 @@ type Packet struct {
 }
 
 func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) {
+	log.Debugf("reverse scanning for %s", scanTime)
 	sensors = models.SensorData{}
 	sensors.Family = family
 	sensors.Device = device
 	sensors.Timestamp = time.Now().UnixNano() / int64(time.Millisecond)
 	sensors.Sensors = make(map[string]map[string]interface{})
 
-	tempFileName := "tshark-" + RandomString(10)
-	tempFile := path.Join("/tmp", tempFileName)
-	defer os.Remove(tempFile)
-	log.Debugf("saving tshark data to %s", tempFile)
+	// gather packet information
+	// Open device
+	handle, err := pcap.OpenLive(wifiInterface, 1024, false, 30*time.Second)
+	if err != nil {
+		return
+	}
+	defer handle.Close()
 
-	command := fmt.Sprintf("tshark -I -i %s -a duration:%d -w %s", wifiInterface, int(scanTime.Seconds()), tempFile)
-	log.Debug(command)
-	RunCommand(scanTime+scanTime+scanTime+scanTime+scanTime, command)
-
-	out, _ := RunCommand(scanTime+scanTime+scanTime+scanTime, "/usr/bin/tshark -r "+tempFile+" -T fields -e frame.time_epoch -e wlan.ta -e wlan.ra -e radiotap.dbm_antsignal")
-	lines := strings.Split(out, "\n")
-	packets := make([]Packet, 2*len(lines))
-	i := 0
-	for _, line := range lines {
-		fields := strings.Fields(line)
-		if len(fields) != 4 {
-			continue
+	startTime := time.Now()
+	packets := []Packet{}
+	// Use the handle as a packet source to process all packets
+	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+	for packet := range packetSource.Packets() {
+		if time.Since(startTime).Seconds() > scanTime.Seconds() {
+			break
 		}
-		if fields[2] != "ff:ff:ff:ff:ff:ff" {
-			continue
-		}
-
-		if doIgnoreRandomizedMacs && utils.IsMacRandomized(fields[1]) {
-			continue
-		}
-
-		// determine time
-		timeSeconds, err := strconv.ParseFloat(fields[0], 64)
-		if err != nil {
-			log.Error(err)
-			continue
-		}
-		nanoSeconds := int64(timeSeconds * 1e9)
-
-		packet := Packet{}
-		packet.Timestamp = time.Unix(0, nanoSeconds)
-		packet.Mac = fields[1]
-		// determine rssi
-		rssiStrings := strings.Split(fields[3], ",")
-		for _, rssiString := range rssiStrings {
-			rssi, err := strconv.Atoi(rssiString)
-			if err != nil {
-				log.Error(err)
-				continue
+		// Process packet here
+		// fmt.Println(packet.String())
+		address := ""
+		rssi := 0
+		for _, layer := range packet.Layers() {
+			if layer.LayerType() == layers.LayerTypeRadioTap {
+				rt := layer.(*layers.RadioTap)
+				rssi = int(rt.DBMAntennaSignal)
+			} else if layer.LayerType() == layers.LayerTypeDot11 {
+				dot11 := layer.(*layers.Dot11)
+				addresses := []string{dot11.Address1.String(), dot11.Address2.String(), dot11.Address3.String(), dot11.Address4.String()}
+				isOk := false
+				tempAddress := ""
+				for _, ad := range addresses {
+					if strings.Contains(ad, "ff:ff") {
+						isOk = true
+					} else if len(ad) > 0 {
+						tempAddress = ad
+					}
+				}
+				if isOk {
+					address = tempAddress
+				}
 			}
-			if rssi < int(minimumThreshold) {
-				continue
+		}
+		if address != "" && rssi != 0 {
+			newPacket := Packet{
+				Mac:       address,
+				RSSI:      rssi,
+				Timestamp: time.Now(),
 			}
-			packet.RSSI = int(rssi)
-			if i >= len(packets) {
-				packets = append(packets, packet)
-			} else {
-				packets[i] = packet
-			}
-			i++
+			packets = append(packets, newPacket)
+			log.Debugf("%+v", newPacket)
 		}
 	}
-	packets = packets[:i]
 
 	// merge packets
 	strengths := make(map[string][]int)
@@ -97,7 +90,7 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 	}
 	mergedPackets := make(map[string]struct{})
 	newPackets := make([]Packet, len(packets))
-	i = 0
+	i := 0
 	for _, packet := range packets {
 		if _, ok := mergedPackets[packet.Mac]; ok {
 			continue

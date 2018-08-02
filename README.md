@@ -77,7 +77,7 @@ $ sudo apt-get install bluetooth
 (Optional) If you want to do Passive scanning, then do:
 
 ```
-$ sudo apt-get install tshark
+$ sudo apt-get install libpcap-dev
 ```
 
 Now, you can  [download the command-line scanner](https://github.com/schollz/find3-cli-scanner/releases/latest).
