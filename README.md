@@ -7,9 +7,43 @@
 
 **The Framework for Internal Navigation and Discovery** (_FIND_) is like indoor GPS for your house or business, using only a simple smartphone or laptop. This command-line scanner provides a means for your laptop your computer to monitor the address and signal of nearby WiFi and bluetooth devices (*active scanning*). Also, if equipped with a monitor-mode enabled WiFI card, you can use the scanner to intercept probe requests to do *passive scanning*.
 
+This tool should be able to be used on Linux, Windows and OS X. Though, currently only Linux and OS X support bluetooth and passive scanning.
+
 ## Install
 
-There are two ways to install - with Docker, or natively on Linux. If you are using OS X / Windows, I suggest to use Docker. Some of the instructions (namely getting WiFi RSSI values) are specific to the Ubuntu OS.
+There are a couple of ways to install. I recommend downloading the [latest release](https://github.com/schollz/find3-cli-scanner/releases/latest) as that is the easiest way.
+
+### Install natively
+
+First make sure you have [downloaded Go](https://golang.org/dl/).
+
+Then, install the dependencies. 
+
+*Linux*
+
+```
+$ sudo apt-get install wireless-tools net-tools libpcap-dev bluetooth
+```
+
+*OS X*
+
+```
+$ brew install libpcap
+```
+
+Now download the scanner with *go get*:
+
+```
+$ go get -u -v github.com/schollz/find3-cli-scanner
+```
+
+Then you can install it using
+
+```
+$ cd $GOPATH/src/github.com/schollz/find3-cli-scanner
+$ make
+$ sudo make install
+```
 
 ### Install with Docker
 
@@ -60,45 +94,7 @@ $ docker run --net="host" --privileged --name scanning -i -t scanner /bin/bash
 > 
 
 
-### Install natively
 
-Install the dependencies.
-
-```
-$ sudo apt-get install wireless-tools iw net-tools
-```
-
-(Optional) If you want to do Bluetooth scanning too, then also:
-
-```
-$ sudo apt-get install bluetooth
-```
-
-(Optional) If you want to do Passive scanning, then do:
-
-```
-$ sudo apt-get install libpcap-dev
-```
-
-Now, you can  [download the command-line scanner](https://github.com/schollz/find3-cli-scanner/releases/latest).
-
-Or you can build from source. First [install Go](https://golang.org/dl/) and pull the latest:
-
-```
-$ go get -u -v github.com/schollz/find3-cli-scanner
-```
-
-Then you can install it using
-
-```
-$ go install github.com/schollz/find3-cli-scanner
-```
-
-Make sure to move it to a path that is available to root. The root access is needed because of the necessary access to the WiFI card. If your `$GOPATH` is not specified in root, then you can do
-
-```
-$ mv $GOPATH/bin/find3-cli-scanner /usr/local/bin/
-```
 
 ## Usage
 
