@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"runtime"
 
+	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 )
 
@@ -31,6 +32,7 @@ Linux: apt-get install libpcap-dev
 
 // Release will build and then tar a release
 func Release() error {
+	mg.Deps(Build)
 	err := sh.RunV("tar", "-czvf", "find3-cli-scanner-"+runtime.GOOS+"-"+runtime.GOARCH+".tar.gz", "find3-cli-scanner", "README.md")
 	if err == nil {
 		fmt.Println("built", "find3-cli-scanner-"+runtime.GOOS+"-"+runtime.GOARCH+".tar.gz")

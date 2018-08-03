@@ -40,9 +40,9 @@ $ go get -u -v github.com/schollz/find3-cli-scanner
 Then you can install it using
 
 ```
-$ cd $GOPATH/src/github.com/schollz/find3-cli-scanner
-$ make
-$ sudo make install
+$ go get github.com/magefile/mage
+$ mage
+$ sudo mv find3-cli-scanner /usr/local/bin  # linux / OS X only
 ```
 
 ### Install with Docker
