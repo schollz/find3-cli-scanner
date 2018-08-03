@@ -4,9 +4,12 @@
 HASH=$(shell git describe --tags)
 LDFLAGS=-ldflags "-s -w -X main.version=${HASH}"
 
-basicbuild:
-	# make sure you have libpcap
-	# Linux: apt-get install libpcap-dev
-	# OS X: brew install libpcap
-	go build -v ${LDFLAGS}
+basicbuild: getmage
+	mage
 
+release: basicbuild
+	mage release
+
+
+getmage:
+	go get github.com/magefile/mage 
