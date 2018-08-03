@@ -186,6 +186,9 @@ func main() {
 			if doBluetooth {
 				log.Infof("scanning bluetooth")
 			}
+			if doBluetooth || doReverse {
+				log.Infof("scanning for %d seconds", scanSeconds)
+			}
 			if !doReverse {
 				err = basicCapture()
 			} else {
