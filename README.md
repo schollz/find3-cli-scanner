@@ -59,7 +59,7 @@ If *not* using a Raspberry Pi, fetch the latest image.
 $ docker pull schollz/find3-cli-scanner
 ```
 
-If you are using a Raspberry Pi (`armf` arch), you need to build the image yourself.
+If you are using a Raspberry Pi (`armf` arch), you need to build the image yourself, although I suggest Raspberry Pi's just built natively above.
 
 ```
 $ wget https://raw.githubusercontent.com/schollz/find3-cli-scanner/master/Dockerfile
@@ -92,8 +92,6 @@ $ docker stop scanning
 $ docker run --net="host" --privileged --name scanning -i -t scanner /bin/bash
 ```
 > 
-
-
 
 
 ## Usage
