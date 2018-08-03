@@ -257,7 +257,7 @@ func basicCapture() (err error) {
 	numSensors := 0
 
 	if doWifi {
-		go iw(c)
+		go scanWifi(c)
 		numSensors++
 	}
 
