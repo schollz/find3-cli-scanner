@@ -31,7 +31,7 @@ Linux: apt-get install libpcap-dev
 
 // Release will build and then tar a release
 func Release() error {
-	err := sh.RunV("tar", "-czvf", "find3-cli-scanner-"+runtime.GOOS+".tar.gz", "find3-cli-scanner", "README.md")
+	err := sh.RunV("tar", "-czvf", "find3-cli-scanner-"+runtime.GOOS+"-"+runtime.GOARCH+".tar.gz", "find3-cli-scanner", "README.md")
 	if err == nil {
 		fmt.Println("built", "find3-cli-scanner-"+runtime.GOOS+"-"+runtime.GOARCH+".tar.gz")
 	}
