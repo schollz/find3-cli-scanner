@@ -10,6 +10,8 @@ basicbuild: getmage
 release: basicbuild
 	mage release
 
+install: 
+	mv find3-cli-scanner /usr/local/bin/
 
 getmage:
 	go get github.com/magefile/mage 
