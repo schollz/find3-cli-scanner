@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/user"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -156,7 +157,7 @@ func main() {
 		}
 
 		// make sure is sudo
-		if os.Getenv("SUDO_USER") == "" {
+		if runtime.GOOS == "linux" && os.Getenv("SUDO_USER") == "" {
 			user, usererr := user.Current()
 			if usererr == nil && user.Name != "root" {
 				err = errors.New("need to run with sudo")
