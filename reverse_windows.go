@@ -17,3 +17,7 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 	sensors.Sensors = make(map[string]map[string]interface{})
 	err = errors.New("windows does not support gopacket")
 }
+
+func PromiscuousMode(on bool) {
+
+}
