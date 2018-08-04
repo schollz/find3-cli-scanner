@@ -30,58 +30,76 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 	sensors.Timestamp = time.Now().UnixNano() / int64(time.Millisecond)
 	sensors.Sensors = make(map[string]map[string]interface{})
 
-	// gather packet information
-	// Open device
-	handle, err := pcap.OpenLive(wifiInterface, 1024, false, 30*time.Second)
-	if err != nil {
-		return
-	}
-	defer handle.Close()
+	// make a channel to communicate timing
+	done := make(chan error)
 
-	startTime := time.Now()
+	go func() {
+		log.Debug("waiting for ", scanTime)
+		time.Sleep(scanTime)
+		log.Debug("timed out")
+		done <- nil
+	}()
+
 	packets := []Packet{}
-	// Use the handle as a packet source to process all packets
-	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-	for packet := range packetSource.Packets() {
-		if time.Since(startTime).Seconds() > scanTime.Seconds() {
-			break
+
+	go func() {
+		// gather packet information
+		// Open device
+		handle, err := pcap.OpenLive(wifiInterface, 1024, false, 30*time.Second)
+		if err != nil {
+			return
 		}
-		// Process packet here
-		// fmt.Println(packet.String())
-		address := ""
-		rssi := 0
-		for _, layer := range packet.Layers() {
-			if layer.LayerType() == layers.LayerTypeRadioTap {
-				rt := layer.(*layers.RadioTap)
-				rssi = int(rt.DBMAntennaSignal)
-			} else if layer.LayerType() == layers.LayerTypeDot11 {
-				dot11 := layer.(*layers.Dot11)
-				addresses := []string{dot11.Address1.String(), dot11.Address2.String(), dot11.Address3.String(), dot11.Address4.String()}
-				isOk := false
-				tempAddress := ""
-				for _, ad := range addresses {
-					if strings.Contains(ad, "ff:ff") {
-						isOk = true
-					} else if len(ad) > 0 {
-						tempAddress = ad
+		defer handle.Close()
+		startTime := time.Now()
+
+		// Use the handle as a packet source to process all packets
+		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+		for packet := range packetSource.Packets() {
+			if time.Since(startTime).Seconds() > scanTime.Seconds() {
+				done <- nil
+				return
+			}
+			// Process packet here
+			// fmt.Println(packet.String())
+			address := ""
+			rssi := 0
+			for _, layer := range packet.Layers() {
+				if layer.LayerType() == layers.LayerTypeRadioTap {
+					rt := layer.(*layers.RadioTap)
+					rssi = int(rt.DBMAntennaSignal)
+				} else if layer.LayerType() == layers.LayerTypeDot11 {
+					dot11 := layer.(*layers.Dot11)
+					addresses := []string{dot11.Address1.String(), dot11.Address2.String(), dot11.Address3.String(), dot11.Address4.String()}
+					isOk := false
+					tempAddress := ""
+					for _, ad := range addresses {
+						if strings.Contains(ad, "ff:ff") {
+							isOk = true
+						} else if len(ad) > 0 {
+							tempAddress = ad
+						}
+					}
+					if isOk {
+						address = tempAddress
 					}
 				}
-				if isOk {
-					address = tempAddress
+			}
+			if address != "" && rssi != 0 {
+				newPacket := Packet{
+					Mac:       address,
+					RSSI:      rssi,
+					Timestamp: time.Now(),
 				}
+				packets = append(packets, newPacket)
+				log.Debugf("%+v", newPacket)
 			}
 		}
-		if address != "" && rssi != 0 {
-			newPacket := Packet{
-				Mac:       address,
-				RSSI:      rssi,
-				Timestamp: time.Now(),
-			}
-			packets = append(packets, newPacket)
-			log.Debugf("%+v", newPacket)
-		}
-	}
+		done <- err
+	}()
 
+	err = <-done
+	log.Debug("got done signal")
+	log.Debug(err)
 	// merge packets
 	strengths := make(map[string][]int)
 	for _, packet := range packets {
@@ -114,13 +132,11 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 	log.Infof("collected %d packets", len(packets))
 	if len(packets) == 0 {
 		err = errors.New("no packets found")
-		return
 	}
 	sensors.Sensors["wifi"] = make(map[string]interface{})
 	for _, packet := range packets {
 		sensors.Sensors["wifi"][packet.Mac] = packet.RSSI
 	}
-
 	return
 }
 
