@@ -45,7 +45,7 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 	go func() {
 		// gather packet information
 		// Open device
-		handle, err := pcap.OpenLive(wifiInterface, 1024, false, 30*time.Second)
+		handle, err := pcap.OpenLive(wifiInterface, 2048, false, pcap.BlockForever)
 		if err != nil {
 			return
 		}
@@ -91,7 +91,7 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 					Timestamp: time.Now(),
 				}
 				packets = append(packets, newPacket)
-				log.Debugf("%+v", newPacket)
+				log.Debugf("%s: %d", newPacket.Mac, newPacket.RSSI)
 			}
 		}
 		done <- err
@@ -122,8 +122,6 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 		} else {
 			packet.RSSI = strengths[packet.Mac][0]
 		}
-		log.Debugf("%+v", strengths[packet.Mac])
-		log.Debugf("%+v", packet)
 		newPackets[i] = packet
 		i++
 		mergedPackets[packet.Mac] = struct{}{}
