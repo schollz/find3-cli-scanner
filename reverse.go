@@ -72,7 +72,7 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 					dot11 := layer.(*layers.Dot11)
 					receiver := dot11.Address1.String()
 					transmitter := dot11.Address2.String()
-					if receiver == "ff:ff:ff:ff:ff:ff" {
+					if doAllPackets || receiver == "ff:ff:ff:ff:ff:ff" {
 						address = transmitter
 					}
 				}

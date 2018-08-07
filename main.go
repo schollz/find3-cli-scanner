@@ -37,6 +37,7 @@ var (
 	doSetPromiscuous       bool
 	doNotModifyPromiscuity bool
 	doIgnoreRandomizedMacs bool
+	doAllPackets           bool
 	runForever             bool
 )
 
@@ -115,6 +116,10 @@ func main() {
 			Usage: "ignore randomized MAC addresses",
 		},
 		cli.BoolFlag{
+			Name:  "all-packets",
+			Usage: "process all packets (not only broadcast)",
+		},
+		cli.BoolFlag{
 			Name:  "forever",
 			Usage: "run until Ctl+C signal",
 		},
@@ -144,6 +149,7 @@ func main() {
 		doSetPromiscuous = c.GlobalBool("monitor-mode")
 		doNotModifyPromiscuity = c.GlobalBool("no-modify")
 		doIgnoreRandomizedMacs = c.GlobalBool("no-randomized-macs")
+		doAllPackets = c.GlobalBool("all-packets")
 		runForever = c.GlobalBool("forever")
 		scanSeconds = c.GlobalInt("scantime")
 		minimumThreshold = c.GlobalInt("min-rssi")
