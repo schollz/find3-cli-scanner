@@ -64,23 +64,16 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 			address := ""
 			rssi := 0
 			for _, layer := range packet.Layers() {
-				if layer.LayerType() == layers.LayerTypeRadioTap {
+				switch layer.LayerType() {
+				case layers.LayerTypeRadioTap:
 					rt := layer.(*layers.RadioTap)
 					rssi = int(rt.DBMAntennaSignal)
-				} else if layer.LayerType() == layers.LayerTypeDot11 {
+				case layers.LayerTypeDot11:
 					dot11 := layer.(*layers.Dot11)
-					addresses := []string{dot11.Address1.String(), dot11.Address2.String(), dot11.Address3.String(), dot11.Address4.String()}
-					isOk := false
-					tempAddress := ""
-					for _, ad := range addresses {
-						if strings.Contains(ad, "ff:ff") {
-							isOk = true
-						} else if len(ad) > 0 {
-							tempAddress = ad
-						}
-					}
-					if isOk {
-						address = tempAddress
+					receiver := dot11.Address1.String()
+					transmitter := dot11.Address2.String()
+					if receiver == "ff:ff:ff:ff:ff:ff" {
+						address = transmitter
 					}
 				}
 			}
