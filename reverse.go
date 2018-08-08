@@ -63,6 +63,8 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 			// fmt.Println(packet.String())
 			address := ""
 			rssi := 0
+			transmitter := ""
+			receiver := ""
 			for _, layer := range packet.Layers() {
 				switch layer.LayerType() {
 				case layers.LayerTypeRadioTap:
@@ -70,8 +72,8 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 					rssi = int(rt.DBMAntennaSignal)
 				case layers.LayerTypeDot11:
 					dot11 := layer.(*layers.Dot11)
-					receiver := dot11.Address1.String()
-					transmitter := dot11.Address2.String()
+					receiver = dot11.Address1.String()
+					transmitter = dot11.Address2.String()
 					if doAllPackets || receiver == "ff:ff:ff:ff:ff:ff" {
 						address = transmitter
 					}
@@ -84,7 +86,7 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 					Timestamp: time.Now(),
 				}
 				packets = append(packets, newPacket)
-				log.Debugf("%s: %d", newPacket.Mac, newPacket.RSSI)
+				log.Debugf("%s: %d", transmitter, receiver, newPacket.RSSI)
 			}
 		}
 		done <- err
