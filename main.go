@@ -39,6 +39,10 @@ var (
 	doIgnoreRandomizedMacs bool
 	doAllPackets           bool
 	runForever             bool
+	allFrequencies         bool
+	allFrequenciesDelay    int
+
+	currentChannel string
 )
 
 func main() {
@@ -116,6 +120,15 @@ func main() {
 			Usage: "ignore randomized MAC addresses",
 		},
 		cli.BoolFlag{
+			Name:  "all-frequencies",
+			Usage: "scan all frequencies",
+		},
+		cli.IntFlag{
+			Name:  "all-frequencies-delay",
+			Value: 1000,
+			Usage: "scan all frequencies with specified delay in milliseconds",
+		},
+		cli.BoolFlag{
 			Name:  "all-packets",
 			Usage: "process all packets (not only broadcast)",
 		},
@@ -153,6 +166,8 @@ func main() {
 		runForever = c.GlobalBool("forever")
 		scanSeconds = c.GlobalInt("scantime")
 		minimumThreshold = c.GlobalInt("min-rssi")
+		allFrequencies = c.GlobalBool("all-frequencies")
+		allFrequenciesDelay = c.GlobalInt("all-frequencies-delay")
 		if doDebug {
 			setLogLevel("debug")
 		} else {
@@ -185,6 +200,10 @@ func main() {
 			return errors.New("family cannot be blank (set with -f)")
 		}
 
+		if allFrequencies {
+			go HopChannels(time.Duration(allFrequenciesDelay) * time.Millisecond)
+		}
+
 		for {
 			if doWifi {
 				log.Infof("scanning with %s", wifiInterface)
@@ -195,6 +214,7 @@ func main() {
 			if doBluetooth || doReverse {
 				log.Infof("scanning for %d seconds", scanSeconds)
 			}
+
 			if !doReverse {
 				err = basicCapture()
 			} else {

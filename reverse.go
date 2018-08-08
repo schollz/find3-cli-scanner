@@ -86,7 +86,7 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 					Timestamp: time.Now(),
 				}
 				packets = append(packets, newPacket)
-				log.Debugf("%s->%s: %d", transmitter, receiver, newPacket.RSSI)
+				log.Debugf("%s) %s->%s: %d", currentChannel, transmitter, receiver, newPacket.RSSI)
 			}
 		}
 		done <- err
