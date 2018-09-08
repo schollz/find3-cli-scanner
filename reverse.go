@@ -56,6 +56,7 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 		for packet := range packetSource.Packets() {
 			if time.Since(startTime).Seconds() > scanTime.Seconds() {
+				handle.Close()
 				done <- nil
 				return
 			}
