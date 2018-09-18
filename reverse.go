@@ -115,8 +115,11 @@ func ReverseScan(scanTime time.Duration) (sensors models.SensorData, err error) 
 		sort.Ints(strengths[packet.Mac])
 		if len(strengths[packet.Mac]) > 2 {
 			packet.RSSI = strengths[packet.Mac][len(strengths[packet.Mac])/2]
-		} else {
+		} else if len(strengths[packet.Mac]) > 0 {
 			packet.RSSI = strengths[packet.Mac][0]
+		} else {
+			// got no packets
+			continue
 		}
 		newPackets[i] = packet
 		i++
