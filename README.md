@@ -5,7 +5,7 @@
 [![Docker build status](https://img.shields.io/docker/build/schollz/find3-cli-scanner.svg?style=for-the-badge)](https://hub.docker.com/r/schollz/find3-cli-scanner/) 
 [![Donate](https://img.shields.io/badge/beerpay-$5-brown.svg?style=for-the-badge)](https://www.buymeacoffee.com/schollz)
 
-**The Framework for Internal Navigation and Discovery** (_FIND_) is like indoor GPS for your house or business, using only a simple smartphone or laptop. This command-line scanner provides a means for your laptop your computer to monitor the address and signal of nearby WiFi and bluetooth devices (*active scanning*). Also, if equipped with a monitor-mode enabled WiFI card, you can use the scanner to intercept probe requests to do *passive scanning*.
+**The Framework for Internal Navigation and Discovery** (_FIND_) is like indoor GPS for your house or business, using only a simple smartphone or laptop. This command-line scanner provides a means for your laptop or your computer to monitor the address and signal of nearby WiFi and bluetooth devices (*active scanning*). Also, if equipped with a monitor-mode enabled WiFI card, you can use the scanner to intercept probe requests to do *passive scanning*.
 
 This tool should be able to be used on Linux, Windows and OS X. Though, currently only Linux and OS X support bluetooth and passive scanning.
 
@@ -37,7 +37,7 @@ Now download and install the scanner with *go get*:
 $ go get -u -v github.com/schollz/find3-cli-scanner
 ```
 
-If you are on Linux, then you should move it to a path that is available with sudo:
+If you are on Linux, then you should move it to a path that is available with `sudo`:
 
 ```
 $ sudo mv $GOPATH/bin/find3-cli-scanner /usr/local/bin
@@ -148,7 +148,7 @@ The above command will start by enabling monitor mode of the specified interface
 $ find3-cli-scanner -i YOURINTERFACE -monitor-mode
 ```
 
-After enabling monitor moe permanently you need to add a flag `-no-modify` to tell the command line scanner not to enable/disable automatically.
+After enabling monitor mode permanently you need to add a flag `-no-modify` to tell the command line scanner not to enable/disable automatically.
 
 ```
 $ nohup find3-cli-scanner -i YOURINTERFACE \
