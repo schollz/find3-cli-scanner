@@ -56,6 +56,9 @@ func postData(payload models.SensorData, route string) (err error) {
 		return
 	}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(bPayload))
+	if err != nil {
+		return
+	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := httpClient.Do(req)
 	if err != nil {
